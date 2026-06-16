@@ -1,0 +1,3156 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Posyandu Kita — Sistem Informasi Puskesmas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --blue: #1b4fd8;
+        --blue-dark: #1440b8;
+        --blue-light: #eef2ff;
+        --blue-mid: #dbeafe;
+        --accent: #3b82f6;
+        --success: #10b981;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+        --gray-50: #f8fafc;
+        --gray-100: #f1f5f9;
+        --gray-200: #e2e8f0;
+        --gray-300: #cbd5e1;
+        --gray-500: #64748b;
+        --gray-700: #334155;
+        --gray-900: #0f172a;
+        --sidebar-w: 240px;
+        --nav-h: 0px;
+      }
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background: var(--gray-50);
+        color: var(--gray-900);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      #login-page {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        align-items: stretch;
+        background: #fff;
+      }
+      #login-page.hide {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s;
+      }
+
+      .login-left {
+        flex: 0 0 380px;
+        background: linear-gradient(
+          160deg,
+          #1b4fd8 0%,
+          #1440b8 60%,
+          #0f2d8e 100%
+        );
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 40px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+      .login-left::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 255, 255, 0.08) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(255, 255, 255, 0.06) 0%,
+            transparent 50%
+          );
+      }
+      .login-left-logo {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        margin-bottom: 28px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        z-index: 1;
+      }
+      .login-left h2 {
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 12px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+      }
+      .login-left p {
+        font-size: 14px;
+        opacity: 0.8;
+        text-align: center;
+        line-height: 1.7;
+        position: relative;
+        z-index: 1;
+      }
+      .login-left-brand {
+        position: absolute;
+        bottom: 28px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 12px;
+        opacity: 0.5;
+        z-index: 1;
+      }
+
+      .login-right {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        padding: 40px;
+      }
+      .login-form-box {
+        width: 100%;
+        max-width: 400px;
+      }
+      .login-form-box h1 {
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--gray-900);
+        margin-bottom: 6px;
+      }
+      .login-form-box .sub {
+        font-size: 14px;
+        color: var(--gray-500);
+        margin-bottom: 32px;
+      }
+
+      .lf-group {
+        margin-bottom: 18px;
+      }
+      .lf-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--gray-700);
+        margin-bottom: 7px;
+        letter-spacing: 0.3px;
+      }
+      .lf-group input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--gray-900);
+        outline: none;
+        transition:
+          border 0.2s,
+          box-shadow 0.2s;
+        background: #fafbff;
+      }
+      .lf-group input:focus {
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(27, 79, 216, 0.1);
+        background: #fff;
+      }
+
+      .lf-role {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+      .lf-role label {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 9px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-700);
+        transition: all 0.2s;
+      }
+      .lf-role input[type="radio"] {
+        accent-color: var(--blue);
+      }
+      .lf-role label:has(input:checked) {
+        border-color: var(--blue);
+        background: var(--blue-light);
+        color: var(--blue);
+      }
+
+      .btn-login {
+        width: 100%;
+        padding: 13px;
+        background: linear-gradient(135deg, #1b4fd8, #1440b8);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.2s;
+        letter-spacing: 0.2px;
+      }
+      .btn-login:hover:not(:disabled) {
+        background: linear-gradient(135deg, #1440b8, #0f2d8e);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(27, 79, 216, 0.35);
+      }
+      .btn-login:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .login-err {
+        background: #fef2f2;
+        color: #991b1b;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 12px;
+        display: none;
+        border: 1px solid #fecaca;
+      }
+      .login-err.show {
+        display: block;
+      }
+      .login-hint {
+        margin-top: 20px;
+        padding: 14px;
+        background: var(--blue-light);
+        border-radius: 10px;
+        font-size: 12px;
+        color: var(--blue-dark);
+      }
+      .login-hint strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      /* TAB LOGIN / DAFTAR */
+      .auth-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid var(--gray-200);
+        margin-bottom: 24px;
+      }
+      .auth-tab {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 11px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--gray-400);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        font-family: inherit;
+        transition: all 0.2s;
+      }
+      .auth-tab.aktif {
+        color: var(--blue);
+        border-bottom-color: var(--blue);
+      }
+      .auth-panel {
+        display: none;
+      }
+      .auth-panel.aktif {
+        display: block;
+      }
+
+      /* DAFTAR SUKSES */
+      .reg-success {
+        background: #ecfdf5;
+        border: 1.5px solid #a7f3d0;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        display: none;
+      }
+      .reg-success.show {
+        display: block;
+      }
+      .reg-success .rs-icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+      }
+      .reg-success h3 {
+        font-size: 16px;
+        font-weight: 800;
+        color: #065f46;
+        margin-bottom: 6px;
+      }
+      .reg-success p {
+        font-size: 13px;
+        color: #047857;
+        line-height: 1.6;
+      }
+      .reg-success .rs-info {
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 12px;
+        font-size: 12px;
+        color: #065f46;
+        text-align: left;
+      }
+      .reg-success .rs-info strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11px;
+        color: #047857;
+      }
+
+      .login-switch {
+        text-align: center;
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--gray-500);
+      }
+      .login-switch a {
+        color: var(--blue);
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .login-switch a:hover {
+        text-decoration: underline;
+      }
+
+      #app {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      aside {
+        width: var(--sidebar-w);
+        background: #fff;
+        border-right: 1px solid var(--gray-200);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 50;
+      }
+      .sidebar-brand {
+        padding: 20px 16px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--gray-100);
+      }
+      .sidebar-logo {
+        width: 36px;
+        height: 36px;
+        background: var(--blue);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .sidebar-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--gray-900);
+        line-height: 1.2;
+      }
+      .sidebar-sub {
+        font-size: 10px;
+        color: var(--gray-500);
+        font-weight: 500;
+      }
+
+      .sidebar-user {
+        padding: 12px 16px;
+        background: var(--blue-light);
+        margin: 12px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sidebar-avatar {
+        width: 34px;
+        height: 34px;
+        background: var(--blue);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 14px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .sidebar-uname {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--gray-900);
+      }
+      .sidebar-urole {
+        font-size: 11px;
+        color: var(--blue);
+        font-weight: 600;
+      }
+
+      .sidebar-nav {
+        flex: 1;
+        padding: 8px 10px;
+        overflow-y: auto;
+      }
+      .sidebar-section {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--gray-300);
+        letter-spacing: 1px;
+        padding: 12px 8px 6px;
+        text-transform: uppercase;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gray-700);
+        transition: all 0.15s;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        margin-bottom: 2px;
+      }
+      .nav-item:hover {
+        background: var(--gray-100);
+        color: var(--gray-900);
+      }
+      .nav-item.aktif {
+        background: var(--blue-light);
+        color: var(--blue);
+        font-weight: 700;
+      }
+      .nav-item .nav-icon {
+        width: 18px;
+        text-align: center;
+        font-size: 15px;
+      }
+      .nav-badge {
+        margin-left: auto;
+        background: var(--blue);
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 20px;
+      }
+
+      .sidebar-footer {
+        padding: 12px 16px;
+        border-top: 1px solid var(--gray-100);
+      }
+      .btn-logout {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-700);
+        font-family: inherit;
+        transition: all 0.2s;
+      }
+      .btn-logout:hover {
+        background: #fef2f2;
+        color: var(--danger);
+        border-color: #fecaca;
+      }
+
+      .btn-notif {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        background: var(--blue-light);
+        border: 1.5px solid var(--blue-mid);
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--blue);
+        font-family: inherit;
+        transition: all 0.2s;
+        margin-bottom: 8px;
+      }
+      .btn-notif.on {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+        color: var(--success);
+      }
+
+      main {
+        margin-left: var(--sidebar-w);
+        flex: 1;
+        min-height: 100vh;
+        padding: 28px 28px 40px;
+      }
+
+      .halaman {
+        display: none;
+      }
+      .halaman.aktif {
+        display: block;
+      }
+
+      .page-header {
+        margin-bottom: 24px;
+      }
+      .page-header h1 {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+      }
+      .page-header p {
+        font-size: 14px;
+        color: var(--gray-500);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 18px 20px;
+        border: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      .stat-icon.blue {
+        background: var(--blue-light);
+      }
+      .stat-icon.green {
+        background: #ecfdf5;
+      }
+      .stat-icon.amber {
+        background: #fffbeb;
+      }
+      .stat-icon.red {
+        background: #fef2f2;
+      }
+      .stat-val {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--gray-900);
+      }
+      .stat-lbl {
+        font-size: 12px;
+        color: var(--gray-500);
+        font-weight: 500;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .p-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 20px;
+        border: 1px solid var(--gray-200);
+        transition: all 0.2s;
+        cursor: default;
+      }
+      .p-card:hover {
+        box-shadow: 0 4px 16px rgba(27, 79, 216, 0.1);
+        border-color: var(--blue-mid);
+        transform: translateY(-2px);
+      }
+      .p-card-icon {
+        width: 46px;
+        height: 46px;
+        background: var(--blue-light);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+      }
+      .p-card h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+      }
+      .p-card .pmeta {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-bottom: 8px;
+        line-height: 1.6;
+      }
+
+      .tbl-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+      .tbl-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .tbl-header h3 {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--gray-900);
+      }
+      .tbl-header .sub {
+        font-size: 12px;
+        color: var(--gray-500);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th {
+        background: var(--gray-50);
+        color: var(--gray-700);
+        padding: 10px 16px;
+        text-align: left;
+        font-weight: 700;
+        font-size: 12px;
+        border-bottom: 1px solid var(--gray-200);
+      }
+      td {
+        padding: 11px 16px;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: middle;
+        color: var(--gray-700);
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: #fafbff;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+      }
+      .b-blue {
+        background: var(--blue-light);
+        color: var(--blue);
+      }
+      .b-green {
+        background: #ecfdf5;
+        color: #065f46;
+      }
+      .b-amber {
+        background: #fffbeb;
+        color: #92400e;
+      }
+      .b-red {
+        background: #fef2f2;
+        color: #991b1b;
+      }
+      .b-pink {
+        background: #fdf2f8;
+        color: #9d174d;
+      }
+      .b-gray {
+        background: var(--gray-100);
+        color: var(--gray-700);
+      }
+
+      .form-section {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid var(--gray-200);
+        padding: 22px;
+        margin-bottom: 18px;
+      }
+      .form-section h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--gray-100);
+      }
+      .fg {
+        margin-bottom: 14px;
+      }
+      .fg label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+      }
+      .fg input,
+      .fg select,
+      .fg textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 9px;
+        font-size: 13px;
+        color: var(--gray-900);
+        outline: none;
+        font-family: inherit;
+        transition:
+          border 0.2s,
+          box-shadow 0.2s;
+      }
+      .fg input:focus,
+      .fg select:focus,
+      .fg textarea:focus {
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(27, 79, 216, 0.08);
+      }
+      .fg textarea {
+        min-height: 76px;
+        resize: vertical;
+      }
+      .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .row3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 18px;
+        border-radius: 9px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: inherit;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: var(--blue);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--blue-dark);
+        box-shadow: 0 4px 12px rgba(27, 79, 216, 0.25);
+      }
+      .btn-danger {
+        background: var(--danger);
+        color: white;
+      }
+      .btn-danger:hover {
+        background: #dc2626;
+      }
+      .btn-ghost {
+        background: var(--gray-100);
+        color: var(--gray-700);
+      }
+      .btn-ghost:hover {
+        background: var(--gray-200);
+      }
+      .btn-success {
+        background: var(--success);
+        color: white;
+      }
+      /* Tombol kalender */
+      .btn-cal {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1.5px solid #a7f3d0;
+      }
+      .btn-cal:hover {
+        background: #d1fae5;
+        border-color: #6ee7b7;
+      }
+      .btn-xs {
+        padding: 5px 10px;
+        font-size: 11px;
+        border-radius: 6px;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid var(--gray-200);
+        margin-bottom: 18px;
+      }
+      .tab-btn {
+        background: none;
+        border: none;
+        padding: 10px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-500);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        font-family: inherit;
+        transition: all 0.2s;
+      }
+      .tab-btn.aktif {
+        color: var(--blue);
+        border-bottom-color: var(--blue);
+      }
+
+      .search-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .search-row input,
+      .search-row select {
+        padding: 9px 14px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 9px;
+        font-size: 13px;
+        font-family: inherit;
+        outline: none;
+        transition: border 0.2s;
+      }
+      .search-row input {
+        flex: 1;
+      }
+      .search-row input:focus,
+      .search-row select:focus {
+        border-color: var(--blue);
+      }
+
+      .ann-item {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--gray-200);
+        border-left: 4px solid var(--blue);
+        padding: 16px 18px;
+        margin-bottom: 12px;
+      }
+      .ann-judul {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 3px;
+      }
+      .ann-meta {
+        font-size: 11px;
+        color: var(--gray-500);
+        margin-bottom: 8px;
+      }
+      .ann-isi {
+        font-size: 13px;
+        color: var(--gray-700);
+        line-height: 1.7;
+      }
+
+      .jadwal-hero {
+        background: linear-gradient(
+          135deg,
+          var(--blue) 0%,
+          var(--blue-dark) 100%
+        );
+        border-radius: 14px;
+        padding: 22px 24px;
+        margin-bottom: 18px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+      .jadwal-hero::after {
+        content: "📅";
+        position: absolute;
+        right: 20px;
+        top: 16px;
+        font-size: 48px;
+        opacity: 0.15;
+      }
+      .jadwal-hero .jh-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        opacity: 0.8;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .jadwal-hero h2 {
+        font-size: 20px;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+      .jadwal-hero .jh-addr {
+        font-size: 13px;
+        opacity: 0.8;
+        margin-bottom: 16px;
+      }
+      .jadwal-hero-meta {
+        display: flex;
+        gap: 24px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+      .jh-meta-item .jh-mi-label {
+        font-size: 10px;
+        opacity: 0.7;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .jh-meta-item .jh-mi-val {
+        font-size: 14px;
+        font-weight: 700;
+      }
+      /* Tombol kalender di hero */
+      .btn-hero-cal {
+        margin-left: auto;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1.5px solid rgba(255, 255, 255, 0.35);
+        color: white;
+        border-radius: 9px;
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        backdrop-filter: blur(6px);
+      }
+      .btn-hero-cal:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      .notif-card {
+        background: var(--blue-light);
+        border: 1.5px solid var(--blue-mid);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .notif-card.on {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+      }
+      .ndot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--gray-300);
+        flex-shrink: 0;
+      }
+      .ndot.on {
+        background: var(--success);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+      }
+      .notif-card p {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--gray-900);
+      }
+      .notif-card small {
+        font-size: 11px;
+        color: var(--gray-500);
+      }
+
+      #modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      #modal-overlay.show {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .modal-box {
+        background: #fff;
+        border-radius: 18px;
+        padding: 28px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+        transform: scale(0.92) translateY(16px);
+        transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      #modal-overlay.show .modal-box {
+        transform: scale(1) translateY(0);
+      }
+      .modal-title {
+        font-size: 17px;
+        font-weight: 800;
+        color: var(--gray-900);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .modal-close {
+        background: var(--gray-100);
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--gray-900);
+        color: white;
+        padding: 11px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        z-index: 99999;
+        transform: translateY(80px);
+        opacity: 0;
+        transition: all 0.3s;
+        pointer-events: none;
+        max-width: 320px;
+      }
+      #toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      #toast.ok {
+        background: #065f46;
+      }
+      #toast.err {
+        background: #991b1b;
+      }
+      #toast.warn {
+        background: #92400e;
+      }
+
+      .conn-bar {
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+      .conn-ok {
+        background: #ecfdf5;
+        color: #065f46;
+      }
+      .conn-err {
+        background: #fef2f2;
+        color: #991b1b;
+      }
+      .cdot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+      }
+      .cdot-ok {
+        background: var(--success);
+      }
+      .cdot-err {
+        background: var(--danger);
+      }
+
+      .loading {
+        text-align: center;
+        padding: 36px;
+        color: var(--gray-300);
+      }
+      .spinner {
+        width: 28px;
+        height: 28px;
+        border: 3px solid var(--gray-200);
+        border-top-color: var(--blue);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        margin: 0 auto 12px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .kosong {
+        text-align: center;
+        padding: 28px;
+        color: var(--gray-300);
+        font-size: 13px;
+      }
+
+      .role-admin {
+        background: var(--blue-light);
+        color: var(--blue);
+      }
+      .role-bidan {
+        background: #ecfdf5;
+        color: #065f46;
+      }
+      .role-user {
+        background: var(--gray-100);
+        color: var(--gray-700);
+      }
+
+      .growth-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .growth-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--gray-200);
+        padding: 16px;
+        text-align: center;
+      }
+      .growth-card .gc-val {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--blue);
+        margin-bottom: 2px;
+      }
+      .growth-card .gc-lbl {
+        font-size: 11px;
+        color: var(--gray-500);
+        font-weight: 600;
+      }
+      .growth-card .gc-unit {
+        font-size: 12px;
+        color: var(--gray-400);
+      }
+
+      .admin-only {
+        display: none;
+      }
+      .admin-mode .admin-only {
+        display: flex;
+      }
+      .admin-mode table .admin-only {
+        display: table-cell;
+      }
+
+      @media (max-width: 768px) {
+        aside {
+          transform: translateX(-100%);
+        }
+        main {
+          margin-left: 0;
+        }
+        .row2,
+        .row3 {
+          grid-template-columns: 1fr;
+        }
+        .login-left {
+          display: none;
+        }
+        .stats-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .growth-cards {
+          grid-template-columns: 1fr;
+        }
+        .btn-hero-cal {
+          margin-left: 0;
+          margin-top: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="login-page">
+      <div class="login-left">
+        <div class="login-left-logo">🏥</div>
+        <h2>Langkah Awal Si Kecil</h2>
+        <p>
+          Pantau pertumbuhan dan kesehatan buah hati Anda dengan mudah dan
+          akurat dalam satu genggaman.
+        </p>
+        <div class="login-left-brand">🛡️ Posyandu Kita</div>
+      </div>
+      <div class="login-right">
+        <div class="login-form-box">
+          <h1>Posyandu Kita</h1>
+          <p class="sub">Sistem Informasi Puskesmas Bontonompo 1</p>
+
+          <!-- TAB SWITCH -->
+          <div class="auth-tabs">
+            <button
+              class="auth-tab aktif"
+              id="tab-masuk"
+              onclick="switchAuthTab('masuk')"
+            >
+              🔑 Masuk
+            </button>
+            <button
+              class="auth-tab"
+              id="tab-daftar"
+              onclick="switchAuthTab('daftar')"
+            >
+              📝 Daftar Akun
+            </button>
+          </div>
+
+          <!-- ═══ PANEL LOGIN ═══ -->
+          <div class="auth-panel aktif" id="panel-masuk">
+            <div class="lf-group">
+              <label>Email</label>
+              <input
+                type="email"
+                id="inp-email"
+                placeholder="Masukkan email Anda"
+                autocomplete="email"
+              />
+            </div>
+            <div class="lf-group">
+              <label>Password</label>
+              <input
+                type="password"
+                id="inp-pass"
+                placeholder="Masukkan password"
+                autocomplete="current-password"
+                onkeydown="if (event.key === 'Enter') doLogin();"
+              />
+            </div>
+            <div class="lf-group">
+              <label>Masuk sebagai</label>
+              <div class="lf-role">
+                <label
+                  ><input type="radio" name="role" value="admin" checked /> 🔑
+                  Admin / Bidan</label
+                >
+                <label
+                  ><input type="radio" name="role" value="user" /> 👤 Orang
+                  Tua</label
+                >
+              </div>
+            </div>
+            <button class="btn-login" id="btn-login" onclick="doLogin()">
+              Masuk →
+            </button>
+            <div class="login-err" id="login-err"></div>
+            <div class="login-hint" style="margin-top: 16px">
+              <strong>💡 Informasi Login</strong>
+              Admin/Bidan: gunakan akun Supabase Auth.<br />
+              Orang Tua: email + NIK Ibu sebagai password.
+            </div>
+            <div class="login-switch">
+              Belum punya akun?
+              <a onclick="switchAuthTab('daftar')">Daftar di sini</a>
+            </div>
+          </div>
+
+          <!-- ═══ PANEL DAFTAR ═══ -->
+          <div class="auth-panel" id="panel-daftar">
+            <!-- Form daftar -->
+            <div id="reg-form">
+              <div class="lf-group">
+                <label>Nama Ibu / Wali *</label>
+                <input
+                  type="text"
+                  id="reg-nama"
+                  placeholder="Nama lengkap ibu atau wali..."
+                />
+              </div>
+              <div class="lf-group">
+                <label
+                  >NIK Ibu *
+                  <span style="font-weight: 400; color: var(--gray-400)"
+                    >(digunakan sebagai password)</span
+                  ></label
+                >
+                <input
+                  type="text"
+                  id="reg-nik"
+                  placeholder="16 digit NIK..."
+                  maxlength="16"
+                  oninput="this.value = this.value.replace(/\D/g, '')"
+                />
+              </div>
+              <div class="lf-group">
+                <label>Email *</label>
+                <input
+                  type="email"
+                  id="reg-email"
+                  placeholder="Email aktif Anda..."
+                />
+              </div>
+              <div class="lf-group">
+                <label>No. HP / WhatsApp *</label>
+                <input
+                  type="tel"
+                  id="reg-hp"
+                  placeholder="cth: 08123456789"
+                  oninput="this.value = this.value.replace(/[^0-9+]/g, '')"
+                />
+              </div>
+              <button class="btn-login" id="btn-daftar" onclick="doDaftar()">
+                Buat Akun →
+              </button>
+              <div class="login-err" id="reg-err"></div>
+              <div class="login-hint" style="margin-top: 16px">
+                <strong>ℹ️ Informasi Penting</strong>
+                NIK Ibu akan digunakan sebagai <strong>password</strong> untuk
+                masuk. Simpan baik-baik!<br />
+                Akun perlu diverifikasi admin sebelum bisa mengakses data anak.
+              </div>
+            </div>
+
+            <!-- Sukses daftar -->
+            <div class="reg-success" id="reg-success">
+              <div class="rs-icon">🎉</div>
+              <h3>Akun Berhasil Dibuat!</h3>
+              <p>Selamat datang di Posyandu Kita. Akun Anda sudah terdaftar.</p>
+              <div class="rs-info">
+                <strong>📋 Informasi Login Anda:</strong>
+                Email: <strong id="rs-email">-</strong><br />
+                Password: <strong>NIK Ibu yang Anda daftarkan</strong
+                ><br /><br />
+                Silakan login sekarang menggunakan tab <strong>Masuk</strong>.
+              </div>
+              <div style="margin-top: 16px">
+                <button
+                  class="btn-login"
+                  onclick="switchAuthTab('masuk')"
+                  style="padding: 11px"
+                >
+                  ← Ke Halaman Masuk
+                </button>
+              </div>
+            </div>
+
+            <div class="login-switch">
+              Sudah punya akun?
+              <a onclick="switchAuthTab('masuk')">Masuk di sini</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="app" style="display: none">
+      <aside>
+        <div class="sidebar-brand">
+          <div class="sidebar-logo">🏥</div>
+          <div>
+            <div class="sidebar-title">Posyandu Kita</div>
+            <div class="sidebar-sub">Puskesmas Bontonompo 1</div>
+          </div>
+        </div>
+
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="sb-avatar">A</div>
+          <div>
+            <div class="sidebar-uname" id="sb-name">Admin</div>
+            <div class="sidebar-urole" id="sb-role">Administrator</div>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="sidebar-section">Menu Utama</div>
+          <button class="nav-item aktif" onclick="showHal('beranda', this)">
+            <span class="nav-icon">🏠</span> Overview
+          </button>
+          <button class="nav-item" onclick="showHal('posyandu', this)">
+            <span class="nav-icon">📍</span> Data Posyandu
+          </button>
+          <button class="nav-item" onclick="showHal('anak', this)">
+            <span class="nav-icon">👶</span> Child Growth
+          </button>
+          <button class="nav-item" onclick="showHal('imunisasi', this)">
+            <span class="nav-icon">💉</span> Immunization
+          </button>
+          <button class="nav-item" onclick="showHal('jadwal', this)">
+            <span class="nav-icon">📅</span> Appointments
+          </button>
+          <button class="nav-item" onclick="showHal('pengumuman', this)">
+            <span class="nav-icon">📢</span> Pengumuman
+          </button>
+          <div class="sidebar-section admin-only" id="menu-admin-section">
+            Admin
+          </div>
+          <button
+            class="nav-item admin-only"
+            id="menu-admin-btn"
+            onclick="showHal('admin', this)"
+          >
+            <span class="nav-icon">⚙️</span> Panel Admin
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <button class="btn-notif" id="notifBtn" onclick="toggleNotif()">
+            🔔 Aktifkan Notifikasi
+          </button>
+          <button class="btn-logout" onclick="doLogout()">🚪 Keluar</button>
+        </div>
+      </aside>
+
+      <main>
+        <div id="conn-bar" class="conn-bar conn-ok">
+          <span class="cdot cdot-ok"></span> Menghubungkan...
+        </div>
+        <div id="toast"></div>
+
+        <!-- BERANDA -->
+        <div class="halaman aktif" id="hal-beranda">
+          <div class="page-header">
+            <h1>Halo, <span id="greet-name">Admin</span>! 👋</h1>
+            <p>Mari pantau tumbuh kembang si kecil hari ini.</p>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon blue">👶</div>
+              <div>
+                <div class="stat-val" id="s-anak">-</div>
+                <div class="stat-lbl">Anak Terdaftar</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green">💉</div>
+              <div>
+                <div class="stat-val" id="s-imun">-</div>
+                <div class="stat-lbl">Imunisasi Pending</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon amber">📅</div>
+              <div>
+                <div class="stat-val" id="s-jadwal">-</div>
+                <div class="stat-lbl">Jadwal Aktif</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon red">📢</div>
+              <div>
+                <div class="stat-val" id="s-pengumuman">-</div>
+                <div class="stat-lbl">Pengumuman</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid3" id="posyandu-beranda"></div>
+
+          <div class="tbl-card">
+            <div class="tbl-header">
+              <h3>💉 Imunisasi Segera Dilakukan</h3>
+              <span class="sub">5 Terdekat</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nama Anak</th>
+                  <th>Vaksin</th>
+                  <th>Posyandu</th>
+                  <th>Jadwal</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="imun-beranda"></tbody>
+            </table>
+          </div>
+
+          <div class="tbl-card">
+            <div class="tbl-header">
+              <h3>📅 Jadwal Terdekat</h3>
+              <span class="sub">5 Terdekat</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Posyandu</th>
+                  <th>Kegiatan</th>
+                  <th>Tanggal</th>
+                  <th>Waktu</th>
+                  <th>Kalender</th>
+                </tr>
+              </thead>
+              <tbody id="jadwal-beranda"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- POSYANDU -->
+        <div class="halaman" id="hal-posyandu">
+          <div class="page-header">
+            <h1>📍 Data Posyandu</h1>
+            <p>3 unit posyandu aktif melayani masyarakat.</p>
+          </div>
+          <div class="grid3" id="posyandu-cards"></div>
+        </div>
+
+        <!-- ANAK -->
+        <div class="halaman" id="hal-anak">
+          <div class="page-header">
+            <h1>👶 Child Growth</h1>
+            <p>Data tumbuh kembang anak — berat badan dan tinggi badan.</p>
+          </div>
+          <div class="search-row">
+            <input
+              type="text"
+              id="cari-anak"
+              placeholder="🔍 Cari nama anak..."
+              oninput="filterAnak()"
+            />
+            <select id="filter-pos-anak" onchange="filterAnak()">
+              <option value="">Semua Posyandu</option>
+            </select>
+          </div>
+          <div class="tbl-card">
+            <div class="tbl-header">
+              <h3>Daftar Anak</h3>
+              <span class="sub" id="jml-anak">-</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nama Anak</th>
+                  <th>L/P</th>
+                  <th>Usia</th>
+                  <th>Tgl Lahir</th>
+                  <th>Berat (kg)</th>
+                  <th>Tinggi (cm)</th>
+                  <th>Nama Ibu</th>
+                  <th>Posyandu</th>
+                  <th class="admin-only">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="anak-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- IMUNISASI -->
+        <div class="halaman" id="hal-imunisasi">
+          <div class="page-header">
+            <h1>💉 Immunization</h1>
+            <p>Pantau jadwal dan status imunisasi anak.</p>
+          </div>
+          <div class="tabs">
+            <button class="tab-btn aktif" onclick="filterImun('Belum', this)">
+              ⏳ Belum
+            </button>
+            <button class="tab-btn" onclick="filterImun('Sudah', this)">
+              ✅ Sudah
+            </button>
+            <button class="tab-btn" onclick="filterImun('Gagal', this)">
+              ❌ Gagal
+            </button>
+            <button class="tab-btn" onclick="filterImun('', this)">
+              📋 Semua
+            </button>
+          </div>
+          <div class="tbl-card">
+            <div class="tbl-header">
+              <h3>Jadwal Imunisasi</h3>
+              <span class="sub" id="jml-imun">-</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nama Anak</th>
+                  <th>Vaksin</th>
+                  <th>Posyandu</th>
+                  <th>Tgl Seharusnya</th>
+                  <th>Status</th>
+                  <th>Kalender</th>
+                  <th class="admin-only">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="imun-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- JADWAL -->
+        <div class="halaman" id="hal-jadwal">
+          <div class="page-header">
+            <h1>📅 Appointments</h1>
+            <p>Jadwal kegiatan seluruh posyandu.</p>
+          </div>
+          <div id="jadwal-hero-wrap"></div>
+          <div class="tbl-card">
+            <div class="tbl-header"><h3>Semua Jadwal</h3></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Posyandu</th>
+                  <th>Kegiatan</th>
+                  <th>Tanggal</th>
+                  <th>Waktu</th>
+                  <th>Keterangan</th>
+                  <th>Kalender</th>
+                  <th class="admin-only">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="jadwal-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PENGUMUMAN -->
+        <div class="halaman" id="hal-pengumuman">
+          <div class="page-header">
+            <h1>📢 Pengumuman</h1>
+            <p>Informasi dan pengumuman dari Puskesmas.</p>
+          </div>
+          <div id="pengumuman-list"></div>
+        </div>
+
+        <!-- ADMIN -->
+        <div class="halaman" id="hal-admin">
+          <div class="page-header">
+            <h1>⚙️ Panel Admin</h1>
+            <p>Kelola data, jadwal, dan pengumuman posyandu.</p>
+          </div>
+
+          <div class="notif-card" id="notif-card">
+            <div class="ndot off" id="ndot"></div>
+            <div style="flex: 1">
+              <p id="ntxt">Notifikasi browser belum diaktifkan</p>
+              <small id="nsub"
+                >Klik tombol Aktifkan Notifikasi di sidebar</small
+              >
+            </div>
+            <div style="display: flex; gap: 8px">
+              <button class="btn btn-ghost btn-xs" onclick="notifTest()">
+                🧪 Test
+              </button>
+              <button class="btn btn-ghost btn-xs" onclick="notifHariIni()">
+                📅 Hari Ini
+              </button>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <button
+              class="tab-btn aktif"
+              onclick="showAdmTab('at-jadwal', this)"
+            >
+              📅 Jadwal
+            </button>
+            <button class="tab-btn" onclick="showAdmTab('at-pengumuman', this)">
+              📢 Pengumuman
+            </button>
+            <button class="tab-btn" onclick="showAdmTab('at-imunisasi', this)">
+              💉 Update Imunisasi
+            </button>
+            <button class="tab-btn" onclick="showAdmTab('at-anak', this)">
+              👶 Tambah Anak
+            </button>
+            <button
+              class="tab-btn"
+              onclick="
+                showAdmTab('at-users', this);
+                loadUsers();
+              "
+            >
+              👥 Kelola User
+            </button>
+          </div>
+
+          <div id="at-jadwal" class="form-section">
+            <h4>📅 Tambah Jadwal Kegiatan</h4>
+            <div class="row2">
+              <div class="fg">
+                <label>Posyandu *</label>
+                <select id="ai-pos">
+                  <option value="">Pilih posyandu...</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Kegiatan *</label>
+                <input
+                  type="text"
+                  id="ai-keg"
+                  placeholder="cth: Penimbangan, Imunisasi..."
+                />
+              </div>
+            </div>
+            <div class="row2">
+              <div class="fg">
+                <label>Tanggal *</label><input type="date" id="ai-tgl" />
+              </div>
+              <div class="fg">
+                <label>Waktu *</label><input type="time" id="ai-wkt" />
+              </div>
+            </div>
+            <div class="fg">
+              <label>Keterangan</label>
+              <textarea
+                id="ai-ket"
+                placeholder="Info tambahan (opsional)..."
+              ></textarea>
+            </div>
+            <button
+              class="btn btn-primary"
+              id="btn-save-jadwal"
+              onclick="simpanJadwal()"
+            >
+              💾 Simpan Jadwal
+            </button>
+          </div>
+
+          <div id="at-pengumuman" class="form-section" style="display: none">
+            <h4>📢 Buat Pengumuman</h4>
+            <div class="fg">
+              <label>Judul *</label
+              ><input
+                type="text"
+                id="ai-judul"
+                placeholder="Judul pengumuman..."
+              />
+            </div>
+            <div class="fg">
+              <label>Isi Pengumuman *</label>
+              <textarea
+                id="ai-isi"
+                placeholder="Tulis isi pengumuman lengkap..."
+                style="min-height: 100px"
+              ></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="simpanPengumuman()">
+              📤 Kirim & Notifikasi
+            </button>
+          </div>
+
+          <div id="at-imunisasi" class="form-section" style="display: none">
+            <h4>💉 Update Status Imunisasi</h4>
+            <p
+              style="
+                font-size: 13px;
+                color: var(--gray-500);
+                margin-bottom: 14px;
+              "
+            >
+              Daftar imunisasi yang belum dilakukan. Klik Sudah atau Gagal untuk
+              mengupdate status.
+            </p>
+            <div class="tbl-card" style="margin-bottom: 0">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nama Anak</th>
+                    <th>Vaksin</th>
+                    <th>Tgl Seharusnya</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="imun-admin-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="at-anak" class="form-section" style="display: none">
+            <h4>👶 Tambah Data Anak</h4>
+            <div class="row2">
+              <div class="fg">
+                <label>Nama Anak *</label
+                ><input
+                  type="text"
+                  id="ai-anama"
+                  placeholder="Nama lengkap anak..."
+                />
+              </div>
+              <div class="fg">
+                <label>NIK Anak</label
+                ><input
+                  type="text"
+                  id="ai-anik"
+                  placeholder="16 digit NIK..."
+                />
+              </div>
+            </div>
+            <div class="row2">
+              <div class="fg">
+                <label>Tanggal Lahir *</label><input type="date" id="ai-atgl" />
+              </div>
+              <div class="fg">
+                <label>Jenis Kelamin *</label>
+                <select id="ai-ajk">
+                  <option value="">Pilih...</option>
+                  <option value="L">Laki-laki</option>
+                  <option value="P">Perempuan</option>
+                </select>
+              </div>
+            </div>
+            <div class="row2">
+              <div class="fg">
+                <label>Posyandu *</label>
+                <select id="ai-apos">
+                  <option value="">Pilih posyandu...</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>ID Orang Tua *</label>
+                <select id="ai-aot">
+                  <option value="">Pilih orang tua...</option>
+                </select>
+              </div>
+            </div>
+            <h4
+              style="
+                margin-top: 4px;
+                border-top: 1px solid var(--gray-100);
+                padding-top: 14px;
+              "
+            >
+              📏 Data Fisik Terakhir
+            </h4>
+            <div class="row2">
+              <div class="fg">
+                <label>Berat Badan (kg)</label
+                ><input
+                  type="number"
+                  id="ai-bb"
+                  placeholder="cth: 8.5"
+                  step="0.1"
+                />
+              </div>
+              <div class="fg">
+                <label>Tinggi Badan (cm)</label
+                ><input
+                  type="number"
+                  id="ai-tb"
+                  placeholder="cth: 72.3"
+                  step="0.1"
+                />
+              </div>
+            </div>
+            <p
+              style="
+                font-size: 11px;
+                color: var(--gray-500);
+                margin-bottom: 14px;
+              "
+            >
+              *Data fisik akan disimpan di tabel riwayat_imunisasi sebagai
+              pengukuran awal.
+            </p>
+            <button class="btn btn-primary" onclick="simpanAnak()">
+              💾 Simpan Data Anak
+            </button>
+          </div>
+
+          <!-- Tab: Kelola User -->
+          <div id="at-users" class="form-section" style="display: none">
+            <h4>👥 Kelola Akun Orang Tua</h4>
+            <p
+              style="
+                font-size: 13px;
+                color: var(--gray-500);
+                margin-bottom: 14px;
+              "
+            >
+              Daftar semua orang tua yang sudah mendaftar. Anda bisa melihat
+              detail atau menghapus akun.
+            </p>
+            <div class="search-row" style="margin-bottom: 14px">
+              <input
+                type="text"
+                id="cari-user"
+                placeholder="🔍 Cari nama atau email..."
+                oninput="filterUsers()"
+              />
+            </div>
+            <div class="tbl-card" style="margin-bottom: 0">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nama Ibu</th>
+                    <th>Email</th>
+                    <th>No. HP</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody">
+                  <tr>
+                    <td colspan="6" class="kosong">
+                      Klik tab ini untuk memuat data.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="modal-overlay" onclick="if (event.target === this) tutupModal();">
+      <div class="modal-box">
+        <div class="modal-title">
+          <span id="modal-title-text">Detail Anak</span>
+          <button class="modal-close" onclick="tutupModal()">✕</button>
+        </div>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+
+    <script>
+      const SURL = "https://jpsxvfablmknbmdsfqks.supabase.co";
+      const SKEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwc3h2ZmFibG1rbmJtZHNmcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2ODA1MDIsImV4cCI6MjA5NjI1NjUwMn0.JAsHJUXrIvPJ3D34HA_V1-H_vsvzPLaiebwxbra0vOI";
+
+      let sb,
+        notifOn = false,
+        allAnak = [],
+        allImun = [],
+        curImunFilter = "Belum";
+      let currentUser = null,
+        isAdmin = false;
+
+      /* ═══ KALENDER (ICS) ═══ */
+      function buatICS(judul, tanggal, waktu, deskripsi, lokasi) {
+        // tanggal: 'YYYY-MM-DD', waktu: 'HH:MM'
+        const dt = tanggal.replace(/-/g, "");
+        const wkt = waktu ? waktu.replace(":", "") + "00" : "080000";
+        const uid = "posyandu-" + Date.now() + "@posyandukita";
+        const ics = [
+          "BEGIN:VCALENDAR",
+          "VERSION:2.0",
+          "PRODID:-//Posyandu Kita//ID",
+          "CALSCALE:GREGORIAN",
+          "METHOD:PUBLISH",
+          "BEGIN:VEVENT",
+          "UID:" + uid,
+          "DTSTART:" + dt + "T" + wkt,
+          "DTEND:" + dt + "T" + wkt.slice(0, 4) + "00".padStart(6, "0"), // +1 jam sederhana
+          "SUMMARY:" + judul,
+          "DESCRIPTION:" + deskripsi,
+          "LOCATION:" + lokasi,
+          "STATUS:CONFIRMED",
+          "END:VEVENT",
+          "END:VCALENDAR",
+        ].join("\r\n");
+
+        const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = judul.replace(/[^a-zA-Z0-9\s]/g, "").trim() + ".ics";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(
+          "📅 File kalender (.ics) diunduh — buka untuk tambah ke kalender HP!",
+          "ok",
+        );
+      }
+
+      function tambahKeKalender(judul, tanggal, waktu, deskripsi, lokasi) {
+        buatICS(judul, tanggal, waktu, deskripsi, lokasi || "Posyandu Kita");
+      }
+
+      /* ═══ AUTH TAB SWITCH ═══ */
+      function switchAuthTab(tab) {
+        document
+          .getElementById("panel-masuk")
+          .classList.toggle("aktif", tab === "masuk");
+        document
+          .getElementById("panel-daftar")
+          .classList.toggle("aktif", tab === "daftar");
+        document
+          .getElementById("tab-masuk")
+          .classList.toggle("aktif", tab === "masuk");
+        document
+          .getElementById("tab-daftar")
+          .classList.toggle("aktif", tab === "daftar");
+        if (tab === "daftar") {
+          /*ready*/
+        }
+      }
+
+      async function doDaftar() {
+        const nama = document.getElementById("reg-nama").value.trim();
+        const nik = document.getElementById("reg-nik").value.trim();
+        const email = document.getElementById("reg-email").value.trim();
+        const hp = document.getElementById("reg-hp").value.trim();
+        const errEl = document.getElementById("reg-err");
+        const btn = document.getElementById("btn-daftar");
+
+        errEl.classList.remove("show");
+
+        // Validasi
+        if (!nama) {
+          errEl.textContent = "⚠️ Nama ibu/wali harus diisi.";
+          errEl.classList.add("show");
+          return;
+        }
+        if (!nik || nik.length !== 16) {
+          errEl.textContent = "⚠️ NIK harus 16 digit angka.";
+          errEl.classList.add("show");
+          return;
+        }
+        if (!email || !email.includes("@")) {
+          errEl.textContent = "⚠️ Email tidak valid.";
+          errEl.classList.add("show");
+          return;
+        }
+        if (!hp) {
+          errEl.textContent = "⚠️ No. HP harus diisi.";
+          errEl.classList.add("show");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Mendaftarkan...";
+
+        try {
+          if (!sb) sb = supabase.createClient(SURL, SKEY);
+
+          // Cek email sudah terdaftar
+          const { data: cek } = await sb
+            .from("orang_tua")
+            .select("id_orang_tua")
+            .eq("email", email)
+            .maybeSingle();
+          if (cek) {
+            throw new Error("Email ini sudah terdaftar. Silakan login.");
+          }
+
+          // Cek NIK sudah terdaftar
+          const { data: cekNik } = await sb
+            .from("orang_tua")
+            .select("id_orang_tua")
+            .eq("nik_ibu", nik)
+            .maybeSingle();
+          if (cekNik) {
+            throw new Error("NIK ini sudah terdaftar dalam sistem.");
+          }
+
+          // Insert ke tabel orang_tua
+          const { error } = await sb.from("orang_tua").insert([
+            {
+              nama_ibu: nama,
+              nik_ibu: nik,
+              email: email,
+              no_hp: hp,
+            },
+          ]);
+
+          if (error) throw error;
+
+          // Tampilkan sukses
+          document.getElementById("reg-form").style.display = "none";
+          document.getElementById("rs-email").textContent = email;
+          document.getElementById("reg-success").classList.add("show");
+        } catch (e) {
+          let msg = e.message || "Pendaftaran gagal";
+          if (msg.includes("duplicate") || msg.includes("unique"))
+            msg = "❌ Email atau NIK sudah terdaftar.";
+          errEl.textContent = msg;
+          errEl.classList.add("show");
+        }
+
+        btn.disabled = false;
+        btn.textContent = "Buat Akun →";
+      }
+
+      /* ═══ AUTH ═══ */
+      async function doLogin() {
+        const email = document.getElementById("inp-email").value.trim();
+        const pass = document.getElementById("inp-pass").value;
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const errEl = document.getElementById("login-err");
+        const btn = document.getElementById("btn-login");
+
+        errEl.classList.remove("show");
+        if (!email || !pass) {
+          errEl.textContent = "⚠️ Email dan password harus diisi.";
+          errEl.classList.add("show");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Memverifikasi...";
+
+        try {
+          if (!sb) sb = supabase.createClient(SURL, SKEY);
+
+          if (role === "admin") {
+            const { data, error } = await sb.auth.signInWithPassword({
+              email,
+              password: pass,
+            });
+            if (error) throw error;
+            isAdmin = true;
+            currentUser = {
+              email: data.user.email,
+              nama: data.user.email.split("@")[0],
+              role: "admin",
+            };
+          } else {
+            const { data, error } = await sb
+              .from("orang_tua")
+              .select("*")
+              .eq("email", email)
+              .single();
+            if (error || !data)
+              throw new Error(
+                "Email tidak ditemukan sebagai orang tua terdaftar.",
+              );
+            if (pass !== data.nik_ibu)
+              throw new Error(
+                "Password salah. Gunakan NIK Ibu sebagai password.",
+              );
+            isAdmin = false;
+            currentUser = {
+              email: data.email,
+              nama: data.nama_ibu,
+              role: "user",
+              id_orang_tua: data.id_orang_tua,
+            };
+          }
+
+          tampilApp();
+        } catch (e) {
+          let msg = e.message || "Login gagal";
+          if (msg.includes("Invalid login credentials"))
+            msg = "❌ Email atau password salah.";
+          errEl.textContent = msg;
+          errEl.classList.add("show");
+        }
+
+        btn.disabled = false;
+        btn.textContent = "Masuk →";
+      }
+
+      function tampilApp() {
+        const loginPg = document.getElementById("login-page");
+        loginPg.classList.add("hide");
+        setTimeout(() => (loginPg.style.display = "none"), 420);
+
+        document.getElementById("app").style.display = "flex";
+
+        const nama = currentUser.nama || currentUser.email;
+        document.getElementById("sb-name").textContent = nama;
+        document.getElementById("sb-avatar").textContent = nama
+          .charAt(0)
+          .toUpperCase();
+        document.getElementById("sb-role").textContent = isAdmin
+          ? "Administrator / Bidan"
+          : "Orang Tua";
+
+        if (isAdmin) {
+          document.getElementById("app").classList.add("admin-mode");
+          document.getElementById("menu-admin-section").style.display = "block";
+          document.getElementById("menu-admin-btn").style.display = "flex";
+        }
+
+        document.getElementById("greet-name").textContent = nama.split(" ")[0];
+        init();
+      }
+
+      async function doLogout() {
+        if (!confirm("Yakin ingin keluar?")) return;
+        if (sb && isAdmin) await sb.auth.signOut();
+        window.location.reload();
+      }
+
+      async function cekSesi() {
+        if (!sb) sb = supabase.createClient(SURL, SKEY);
+        const {
+          data: { session },
+        } = await sb.auth.getSession();
+        if (session) {
+          isAdmin = true;
+          currentUser = {
+            email: session.user.email,
+            nama: session.user.email.split("@")[0],
+            role: "admin",
+          };
+          tampilApp();
+        }
+      }
+
+      /* ═══ INIT ═══ */
+      async function init() {
+        try {
+          if (!sb) sb = supabase.createClient(SURL, SKEY);
+          setConn(true);
+          await Promise.all([
+            loadStats(),
+            loadPosyanduBeranda(),
+            loadImunBeranda(),
+            loadJadwalBeranda(),
+            loadPosyanduCards(),
+            loadAnak(),
+            loadImunisasi(),
+            loadJadwal(),
+            loadPengumuman(),
+            isiDropdownAdmin(),
+            loadImunAdmin(),
+          ]);
+        } catch (e) {
+          setConn(false, e.message);
+        }
+      }
+
+      function setConn(ok, msg) {
+        const b = document.getElementById("conn-bar");
+        b.className = "conn-bar " + (ok ? "conn-ok" : "conn-err");
+        b.innerHTML = `<span class="cdot ${ok ? "cdot-ok" : "cdot-err"}"></span> ${ok ? "Terhubung ke Supabase" : "Gagal: " + (msg || "")}`;
+      }
+
+      /* ═══ LOAD DATA ═══ */
+      async function loadStats() {
+        const [{ count: ca }, { count: ci }, { count: cj }, { count: cp }] =
+          await Promise.all([
+            sb.from("anak").select("*", { count: "exact", head: true }),
+            sb
+              .from("jadwal_imunisasi")
+              .select("*", { count: "exact", head: true })
+              .eq("status_notifikasi", "Belum"),
+            sb
+              .from("jadwal_posyandu")
+              .select("*", { count: "exact", head: true }),
+            sb.from("pengumuman").select("*", { count: "exact", head: true }),
+          ]);
+        document.getElementById("s-anak").textContent = ca ?? 0;
+        document.getElementById("s-imun").textContent = ci ?? 0;
+        document.getElementById("s-jadwal").textContent = cj ?? 0;
+        document.getElementById("s-pengumuman").textContent = cp ?? 0;
+      }
+
+      async function loadPosyanduBeranda() {
+        const { data } = await sb.from("posyandu").select("*");
+        if (!data || !data.length) {
+          document.getElementById("posyandu-beranda").innerHTML =
+            '<div class="kosong">Belum ada data posyandu</div>';
+          return;
+        }
+        const icons = ["🏠", "🏡", "🏘️"],
+          colors = ["#EEF2FF", "#ECFDF5", "#FFFBEB"];
+        document.getElementById("posyandu-beranda").innerHTML = data
+          .map(
+            (p, i) => `
+    <div class="p-card">
+      <div class="p-card-icon" style="background:${colors[i] || "#EEF2FF"}">${icons[i] || "🏥"}</div>
+      <h3>${p.nama_posyandu}</h3>
+      <div class="pmeta">📍 ${p.alamat_posyandu || "-"}<br>👤 ${p.nama_ketua_kader || "-"}</div>
+      <span class="badge b-green">✅ Aktif</span>
+    </div>`,
+          )
+          .join("");
+      }
+
+      async function loadPosyanduCards() {
+        const { data } = await sb.from("posyandu").select("*");
+        const icons = ["🏠", "🏡", "🏘️"],
+          colors = ["#EEF2FF", "#ECFDF5", "#FFFBEB"];
+        const el = document.getElementById("posyandu-cards");
+        if (!data || !data.length) {
+          el.innerHTML = '<div class="kosong">Tidak ada data</div>';
+          return;
+        }
+        el.innerHTML = data
+          .map(
+            (p, i) => `
+    <div class="p-card">
+      <div class="p-card-icon" style="background:${colors[i] || "#EEF2FF"}">${icons[i] || "🏥"}</div>
+      <h3>${p.nama_posyandu}</h3>
+      <div class="pmeta">
+        📍 ${p.alamat_posyandu || "Alamat belum diisi"}<br>
+        👤 Ketua: <strong>${p.nama_ketua_kader || "-"}</strong><br>
+        🆔 ID: #${p.id_posyandu}
+      </div>
+      <span class="badge b-green">✅ Aktif</span>
+    </div>`,
+          )
+          .join("");
+      }
+
+      async function loadImunBeranda() {
+        const { data } = await sb
+          .from("jadwal_imunisasi")
+          .select(
+            "id_jadwal,tanggal_seharusnya,status_notifikasi,anak(nama_anak),master_vaksin(nama_vaksin),posyandu(nama_posyandu)",
+          )
+          .eq("status_notifikasi", "Belum")
+          .order("tanggal_seharusnya", { ascending: true })
+          .limit(5);
+        const tb = document.getElementById("imun-beranda");
+        if (!data || !data.length) {
+          tb.innerHTML =
+            '<tr><td colspan="5" class="kosong">Tidak ada imunisasi pending</td></tr>';
+          return;
+        }
+        tb.innerHTML = data
+          .map(
+            (d) => `
+    <tr>
+      <td><strong>${d.anak?.nama_anak || "-"}</strong></td>
+      <td>${d.master_vaksin?.nama_vaksin || "-"}</td>
+      <td>${d.posyandu?.nama_posyandu || "-"}</td>
+      <td>${fmtTgl(d.tanggal_seharusnya)}</td>
+      <td><span class="badge b-amber">⏳ Belum</span></td>
+    </tr>`,
+          )
+          .join("");
+      }
+
+      async function loadJadwalBeranda() {
+        const { data } = await sb
+          .from("jadwal_posyandu")
+          .select("*")
+          .order("tanggal", { ascending: true })
+          .limit(5);
+        const tb = document.getElementById("jadwal-beranda");
+        if (!data || !data.length) {
+          tb.innerHTML =
+            '<tr><td colspan="5" class="kosong">Belum ada jadwal</td></tr>';
+          return;
+        }
+        tb.innerHTML = data
+          .map(
+            (j) => `
+    <tr>
+      <td><strong>${j.posyandu || "-"}</strong></td>
+      <td>${j.kegiatan || "-"}</td>
+      <td>${fmtTgl(j.tanggal)}</td>
+      <td>${j.waktu || "-"}</td>
+      <td><button class="btn btn-cal btn-xs" onclick="tambahKeKalender('${escQ(j.kegiatan)} - ${escQ(j.posyandu)}','${j.tanggal}','${j.waktu || "08:00"}','${escQ(j.keterangan || "")}','${escQ(j.posyandu || "")}')">📲 Kalender</button></td>
+    </tr>`,
+          )
+          .join("");
+      }
+
+      async function loadAnak() {
+        const { data } = await sb
+          .from("anak")
+          .select(
+            "id_anak,nama_anak,tanggal_lahir,jenis_kelamin,nik_anak,posyandu(id_posyandu,nama_posyandu),orang_tua(nama_ibu)",
+          )
+          .order("nama_anak");
+        allAnak = data || [];
+
+        const { data: riwayat } = await sb
+          .from("riwayat_imunisasi")
+          .select(
+            "berat_badan,tinggi_badan,tanggal_aktual,jadwal_imunisasi(id_anak)",
+          )
+          .order("tanggal_aktual", { ascending: false });
+
+        const riwayatMap = {};
+        (riwayat || []).forEach((r) => {
+          const idAnak = r.jadwal_imunisasi?.id_anak;
+          if (idAnak && !riwayatMap[idAnak]) riwayatMap[idAnak] = r;
+        });
+
+        allAnak = allAnak.map((a) => ({
+          ...a,
+          fisik: riwayatMap[a.id_anak] || null,
+        }));
+
+        const sel = document.getElementById("filter-pos-anak");
+        const existing = Array.from(sel.options).map((o) => o.value);
+        const posyandus = [
+          ...new Set(
+            allAnak.map((a) => a.posyandu?.nama_posyandu).filter(Boolean),
+          ),
+        ];
+        posyandus.forEach((p) => {
+          if (!existing.includes(p)) {
+            const o = document.createElement("option");
+            o.value = p;
+            o.textContent = p;
+            sel.appendChild(o);
+          }
+        });
+
+        renderAnak(allAnak);
+      }
+
+      function renderAnak(data) {
+        const tbody = document.getElementById("anak-tbody");
+        document.getElementById("jml-anak").textContent = data.length + " anak";
+        if (!data.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="9" class="kosong">Tidak ada data anak</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data
+          .map(
+            (a) => `
+    <tr>
+      <td><strong>${a.nama_anak}</strong></td>
+      <td>${a.jenis_kelamin === "L" ? '<span class="badge b-blue">👦 L</span>' : '<span class="badge b-pink">👧 P</span>'}</td>
+      <td>${hitungUsia(a.tanggal_lahir)}</td>
+      <td>${fmtTgl(a.tanggal_lahir)}</td>
+      <td>${a.fisik?.berat_badan != null ? "<strong>" + a.fisik.berat_badan + "</strong> kg" : '<span style="color:#ccc">-</span>'}</td>
+      <td>${a.fisik?.tinggi_badan != null ? "<strong>" + a.fisik.tinggi_badan + "</strong> cm" : '<span style="color:#ccc">-</span>'}</td>
+      <td>${a.orang_tua?.nama_ibu || "-"}</td>
+      <td>${a.posyandu?.nama_posyandu || "-"}</td>
+      <td class="admin-only"><button class="btn btn-danger btn-xs" onclick="hapusAnak(${a.id_anak})">🗑️</button></td>
+    </tr>`,
+          )
+          .join("");
+      }
+
+      function filterAnak() {
+        const q = document.getElementById("cari-anak").value.toLowerCase();
+        const p = document.getElementById("filter-pos-anak").value;
+        renderAnak(
+          allAnak.filter(
+            (a) =>
+              (!q || a.nama_anak.toLowerCase().includes(q)) &&
+              (!p || a.posyandu?.nama_posyandu === p),
+          ),
+        );
+      }
+
+      async function loadImunisasi() {
+        const { data } = await sb
+          .from("jadwal_imunisasi")
+          .select(
+            "id_jadwal,tanggal_seharusnya,status_notifikasi,anak(nama_anak),master_vaksin(nama_vaksin),posyandu(nama_posyandu)",
+          )
+          .order("tanggal_seharusnya");
+        allImun = data || [];
+        renderImun(curImunFilter);
+      }
+
+      function filterImun(status, btn) {
+        curImunFilter = status;
+        document
+          .querySelectorAll(".tabs .tab-btn")
+          .forEach((b) => b.classList.remove("aktif"));
+        if (btn) btn.classList.add("aktif");
+        renderImun(status);
+      }
+
+      function renderImun(status) {
+        const filtered = status
+          ? allImun.filter((d) => d.status_notifikasi === status)
+          : allImun;
+        const tbody = document.getElementById("imun-tbody");
+        document.getElementById("jml-imun").textContent =
+          filtered.length + " data";
+        if (!filtered.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="kosong">Tidak ada data</td></tr>';
+          return;
+        }
+        tbody.innerHTML = filtered
+          .map((d) => {
+            const b =
+              d.status_notifikasi === "Sudah"
+                ? "b-green"
+                : d.status_notifikasi === "Gagal"
+                  ? "b-red"
+                  : "b-amber";
+            const i =
+              d.status_notifikasi === "Sudah"
+                ? "✅"
+                : d.status_notifikasi === "Gagal"
+                  ? "❌"
+                  : "⏳";
+            const calBtn = `<td><button class="btn btn-cal btn-xs" onclick="tambahKeKalender('Imunisasi ${escQ(d.master_vaksin?.nama_vaksin || "")} - ${escQ(d.anak?.nama_anak || "")}','${d.tanggal_seharusnya}','08:00','Imunisasi ${escQ(d.master_vaksin?.nama_vaksin || "")} untuk ${escQ(d.anak?.nama_anak || "")}','${escQ(d.posyandu?.nama_posyandu || "")}')">📲 Kalender</button></td>`;
+            const aksi =
+              isAdmin && d.status_notifikasi === "Belum"
+                ? `<td><button class="btn btn-success btn-xs" onclick="updateImun(${d.id_jadwal},'Sudah')">✅</button> <button class="btn btn-danger btn-xs" onclick="updateImun(${d.id_jadwal},'Gagal')">❌</button></td>`
+                : "<td>-</td>";
+            return `<tr><td><strong>${d.anak?.nama_anak || "-"}</strong></td><td>${d.master_vaksin?.nama_vaksin || "-"}</td><td>${d.posyandu?.nama_posyandu || "-"}</td><td>${fmtTgl(d.tanggal_seharusnya)}</td><td><span class="badge ${b}">${i} ${d.status_notifikasi}</span></td>${calBtn}${aksi}</tr>`;
+          })
+          .join("");
+      }
+
+      async function loadJadwal() {
+        const { data } = await sb
+          .from("jadwal_posyandu")
+          .select("*")
+          .order("tanggal", { ascending: true });
+        const heroWrap = document.getElementById("jadwal-hero-wrap");
+        const next = data?.find((j) => new Date(j.tanggal) >= new Date());
+        if (next) {
+          heroWrap.innerHTML = `
+      <div class="jadwal-hero">
+        <div class="jh-label">📅 Jadwal Mendatang</div>
+        <h2>${next.posyandu || "Posyandu"}</h2>
+        <div class="jh-addr">${next.keterangan || "Kegiatan rutin posyandu"}</div>
+        <div class="jadwal-hero-meta">
+          <div class="jh-meta-item"><div class="jh-mi-label">Tanggal</div><div class="jh-mi-val">${fmtTglPanjang(next.tanggal)}</div></div>
+          <div class="jh-meta-item"><div class="jh-mi-label">Waktu</div><div class="jh-mi-val">${next.waktu || "-"}</div></div>
+          <div class="jh-meta-item"><div class="jh-mi-label">Layanan</div><div class="jh-mi-val">${next.kegiatan || "-"}</div></div>
+          <button class="btn-hero-cal" onclick="tambahKeKalender('${escQ(next.kegiatan)} - ${escQ(next.posyandu)}','${next.tanggal}','${next.waktu || "08:00"}','${escQ(next.keterangan || "")}','${escQ(next.posyandu || "")}')">📲 Simpan ke Kalender HP</button>
+        </div>
+      </div>`;
+        } else heroWrap.innerHTML = "";
+
+        const tbody = document.getElementById("jadwal-tbody");
+        if (!data || !data.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="kosong">Belum ada jadwal. Tambahkan dari panel Admin.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data
+          .map((j) => {
+            const aksi = isAdmin
+              ? `<td class="admin-only"><button class="btn btn-danger btn-xs" onclick="hapusJadwal(${j.id})">🗑️</button></td>`
+              : '<td class="admin-only">-</td>';
+            return `<tr>
+      <td><strong>${j.posyandu || "-"}</strong></td>
+      <td>${j.kegiatan || "-"}</td>
+      <td>${fmtTglPanjang(j.tanggal)}</td>
+      <td>${j.waktu || "-"}</td>
+      <td>${j.keterangan || "-"}</td>
+      <td><button class="btn btn-cal btn-xs" onclick="tambahKeKalender('${escQ(j.kegiatan)} - ${escQ(j.posyandu)}','${j.tanggal}','${j.waktu || "08:00"}','${escQ(j.keterangan || "")}','${escQ(j.posyandu || "")}')">📲 Kalender</button></td>
+      ${aksi}
+    </tr>`;
+          })
+          .join("");
+      }
+
+      async function loadPengumuman() {
+        const { data } = await sb
+          .from("pengumuman")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(20);
+        const el = document.getElementById("pengumuman-list");
+        if (!data || !data.length) {
+          el.innerHTML = '<div class="kosong">Belum ada pengumuman</div>';
+          return;
+        }
+        el.innerHTML = data
+          .map(
+            (p) => `
+    <div class="ann-item">
+      <div style="display:flex;align-items:start;justify-content:space-between;">
+        <div>
+          <div class="ann-judul">📢 ${p.judul || "Pengumuman"}</div>
+          <div class="ann-meta">${fmtTglPanjang(p.created_at)}</div>
+        </div>
+        ${isAdmin ? `<button class="btn btn-danger btn-xs" onclick="hapusPengumuman(${p.id})">🗑️</button>` : ""}
+      </div>
+      <div class="ann-isi">${p.isi || ""}</div>
+    </div>`,
+          )
+          .join("");
+      }
+
+      async function loadImunAdmin() {
+        const { data } = await sb
+          .from("jadwal_imunisasi")
+          .select(
+            "id_jadwal,tanggal_seharusnya,status_notifikasi,anak(nama_anak),master_vaksin(nama_vaksin)",
+          )
+          .eq("status_notifikasi", "Belum")
+          .order("tanggal_seharusnya");
+        const tbody = document.getElementById("imun-admin-tbody");
+        if (!data || !data.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="kosong">Tidak ada imunisasi pending</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data
+          .map(
+            (d) => `
+    <tr>
+      <td><strong>${d.anak?.nama_anak || "-"}</strong></td>
+      <td>${d.master_vaksin?.nama_vaksin || "-"}</td>
+      <td>${fmtTgl(d.tanggal_seharusnya)}</td>
+      <td><span class="badge b-amber">⏳ Belum</span></td>
+      <td>
+        <button class="btn btn-success btn-xs" onclick="updateImun(${d.id_jadwal},'Sudah')">✅ Sudah</button>
+        <button class="btn btn-danger btn-xs" onclick="updateImun(${d.id_jadwal},'Gagal')">❌ Gagal</button>
+      </td>
+    </tr>`,
+          )
+          .join("");
+      }
+
+      let allUsers = [];
+      async function loadUsers() {
+        if (!isAdmin) {
+          return;
+        }
+        const tbody = document.getElementById("users-tbody");
+        tbody.innerHTML =
+          '<tr><td colspan="6" class="loading"><div class="spinner"></div>Memuat data...</td></tr>';
+        const { data, error } = await sb
+          .from("users")
+          .select("id, id_posyandu, email")
+          .order("id");
+        if (error) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="kosong">Gagal memuat: ' +
+            error.message +
+            "</td></tr>";
+          return;
+        }
+        allUsers = data || [];
+        renderUsers(allUsers);
+      }
+
+      function renderUsers(data) {
+        const tbody = document.getElementById("users-tbody");
+        if (!data.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="kosong">Belum ada orang tua terdaftar.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data
+          .map(
+            (u) => `
+    <tr>
+      <td><strong>${u.nama_ibu || "-"}</strong></td>
+      <td>${u.email || "-"}</td>
+      <td>${u.no_hp || "-"}</td>
+      <td><button class="btn btn-danger btn-xs" onclick="hapusUser(${u.id_orang_tua},'${escQ(u.nama_ibu)}')">🗑️ Hapus</button></td>
+    </tr>`,
+          )
+          .join("");
+      }
+
+      function filterUsers() {
+        const q = document.getElementById("cari-user").value.toLowerCase();
+        renderUsers(
+          allUsers.filter(
+            (u) =>
+              !q ||
+              (u.nama_ibu || "").toLowerCase().includes(q) ||
+              (u.email || "").toLowerCase().includes(q),
+          ),
+        );
+      }
+
+      async function hapusUser(id, nama) {
+        if (!isAdmin) {
+          showToast("❌ Hanya admin", "err");
+          return;
+        }
+        if (
+          !confirm(
+            `Yakin hapus akun "${nama}"?\nSemua data anak yang terhubung mungkin ikut terpengaruh.`,
+          )
+        )
+          return;
+        const { error } = await sb
+          .from("orang_tua")
+          .delete()
+          .eq("id_orang_tua", id);
+        if (error) {
+          showToast("❌ Gagal: " + error.message, "err");
+          return;
+        }
+        showToast("✅ Akun " + nama + " berhasil dihapus", "ok");
+        await loadUsers();
+      }
+
+      async function isiDropdownAdmin() {
+        const [posRes, otRes] = await Promise.all([
+          sb.from("posyandu").select("id_posyandu,nama_posyandu"),
+          sb.from("orang_tua").select("id_orang_tua,nama_ibu"),
+        ]);
+        const posyandus = posRes.data || [];
+        const ots = otRes.data || [];
+
+        ["ai-pos", "ai-apos"].forEach((id) => {
+          const sel = document.getElementById(id);
+          if (!sel) return;
+          sel.innerHTML = '<option value="">Pilih posyandu...</option>';
+          posyandus.forEach((p) => {
+            sel.innerHTML += `<option value="${id === "ai-pos" ? p.nama_posyandu : p.id_posyandu}">${p.nama_posyandu}</option>`;
+          });
+        });
+
+        const otSel = document.getElementById("ai-aot");
+        if (otSel) {
+          otSel.innerHTML = '<option value="">Pilih orang tua...</option>';
+          ots.forEach((o) => {
+            otSel.innerHTML += `<option value="${o.id_orang_tua}">${o.nama_ibu}</option>`;
+          });
+        }
+      }
+
+      /* ═══ CRUD ═══ */
+      async function simpanJadwal() {
+        if (!isAdmin) {
+          showToast("❌ Hanya admin yang bisa melakukan ini", "err");
+          return;
+        }
+        const pos = document.getElementById("ai-pos").value;
+        const keg = document.getElementById("ai-keg").value.trim();
+        const tgl = document.getElementById("ai-tgl").value;
+        const wkt = document.getElementById("ai-wkt").value;
+        const ket = document.getElementById("ai-ket").value.trim();
+        if (!pos || !keg || !tgl || !wkt) {
+          showToast("⚠️ Lengkapi semua field wajib", "warn");
+          return;
+        }
+
+        const btn = document.getElementById("btn-save-jadwal");
+        btn.disabled = true;
+        btn.textContent = "⏳ Menyimpan...";
+        const { error } = await sb.from("jadwal_posyandu").insert([
+          {
+            posyandu: pos,
+            kegiatan: keg,
+            tanggal: tgl,
+            waktu: wkt,
+            keterangan: ket,
+          },
+        ]);
+        btn.disabled = false;
+        btn.textContent = "💾 Simpan Jadwal";
+
+        if (error) {
+          showToast("❌ Gagal: " + error.message, "err");
+          return;
+        }
+        showToast("✅ Jadwal berhasil ditambahkan!", "ok");
+        document.getElementById("ai-keg").value = "";
+        document.getElementById("ai-tgl").value = "";
+        document.getElementById("ai-wkt").value = "";
+        document.getElementById("ai-ket").value = "";
+        await Promise.all([loadJadwal(), loadJadwalBeranda(), loadStats()]);
+        kirimNotif(
+          "📅 Jadwal Baru: " + pos,
+          keg + " — " + fmtTgl(tgl) + " pukul " + wkt,
+        );
+      }
+
+      async function simpanPengumuman() {
+        if (!isAdmin) {
+          showToast("❌ Hanya admin yang bisa melakukan ini", "err");
+          return;
+        }
+        const judul = document.getElementById("ai-judul").value.trim();
+        const isi = document.getElementById("ai-isi").value.trim();
+        if (!judul || !isi) {
+          showToast("⚠️ Lengkapi judul dan isi", "warn");
+          return;
+        }
+        const { error } = await sb.from("pengumuman").insert([{ judul, isi }]);
+        if (error) {
+          showToast("❌ Gagal: " + error.message, "err");
+          return;
+        }
+        showToast("✅ Pengumuman berhasil dikirim!", "ok");
+        document.getElementById("ai-judul").value = "";
+        document.getElementById("ai-isi").value = "";
+        await Promise.all([loadPengumuman(), loadStats()]);
+        kirimNotif("📢 " + judul, isi.substring(0, 100));
+      }
+
+      async function updateImun(id, status) {
+        if (!isAdmin) {
+          showToast("❌ Hanya admin yang bisa melakukan ini", "err");
+          return;
+        }
+        const { error } = await sb
+          .from("jadwal_imunisasi")
+          .update({ status_notifikasi: status })
+          .eq("id_jadwal", id);
+        if (error) {
+          showToast("❌ Gagal: " + error.message, "err");
+          return;
+        }
+        showToast(
+          (status === "Sudah" ? "✅" : "❌") +
+            " Status imunisasi diperbarui ke " +
+            status,
+          "ok",
+        );
+        await Promise.all([
+          loadImunisasi(),
+          loadImunAdmin(),
+          loadImunBeranda(),
+          loadStats(),
+        ]);
+        kirimNotif("💉 Update Imunisasi", "Jadwal #" + id + " → " + status);
+      }
+
+      async function simpanAnak() {
+        if (!isAdmin) {
+          showToast("❌ Hanya admin yang bisa melakukan ini", "err");
+          return;
+        }
+        const nama = document.getElementById("ai-anama").value.trim();
+        const nik = document.getElementById("ai-anik").value.trim();
+        const tgl = document.getElementById("ai-atgl").value;
+        const jk = document.getElementById("ai-ajk").value;
+        const pos = document.getElementById("ai-apos").value;
+        const ot = document.getElementById("ai-aot").value;
+        const bb = parseFloat(document.getElementById("ai-bb").value) || null;
+        const tb = parseFloat(document.getElementById("ai-tb").value) || null;
+
+        if (!nama || !tgl || !jk || !pos || !ot) {
+          showToast("⚠️ Lengkapi semua field wajib", "warn");
+          return;
+        }
+
+        const { data: anakBaru, error } = await sb
+          .from("anak")
+          .insert([
+            {
+              nama_anak: nama,
+              nik_anak: nik || null,
+              tanggal_lahir: tgl,
+              jenis_kelamin: jk,
+              id_posyandu: parseInt(pos),
+              id_orang_tua: parseInt(ot),
+            },
+          ])
+          .select();
+
+        if (error) {
+          showToast("❌ Gagal simpan anak: " + error.message, "err");
+          return;
+        }
+        showToast("✅ Data anak berhasil ditambahkan!", "ok");
+
+        ["ai-anama", "ai-anik", "ai-atgl", "ai-bb", "ai-tb"].forEach(
+          (id) => (document.getElementById(id).value = ""),
+        );
+        document.getElementById("ai-ajk").value = "";
+        document.getElementById("ai-apos").value = "";
+        document.getElementById("ai-aot").value = "";
+
+        await Promise.all([loadAnak(), loadStats()]);
+      }
+
+      async function hapusAnak(id) {
+        if (!isAdmin) {
+          showToast("❌ Hanya admin", "err");
+          return;
+        }
+        if (
+          !confirm(
+            "Yakin hapus data anak ini? Semua riwayat akan ikut terhapus.",
+          )
+        )
+          return;
+        const { error } = await sb.from("anak").delete().eq("id_anak", id);
+        if (error) {
+          showToast("❌ Gagal: " + error.message, "err");
+          return;
+        }
+        showToast("✅ Data anak dihapus", "ok");
+        await Promise.all([loadAnak(), loadStats()]);
+      }
+
+      async function hapusJadwal(id) {
+        if (!isAdmin) {
+          showToast("❌ Hanya admin", "err");
+          return;
+        }
+        if (!confirm("Yakin hapus jadwal ini?")) return;
+        const { error } = await sb
+          .from("jadwal_posyandu")
+          .delete()
+          .eq("id", id);
+        if (error) {
+          showToast("❌ Gagal: " + error.message, "err");
+          return;
+        }
+        showToast("✅ Jadwal dihapus", "ok");
+        await Promise.all([loadJadwal(), loadJadwalBeranda(), loadStats()]);
+      }
+
+      async function hapusPengumuman(id) {
+        if (!isAdmin) {
+          showToast("❌ Hanya admin", "err");
+          return;
+        }
+        if (!confirm("Yakin hapus pengumuman ini?")) return;
+        const { error } = await sb.from("pengumuman").delete().eq("id", id);
+        if (error) {
+          showToast("❌ Gagal: " + error.message, "err");
+          return;
+        }
+        showToast("✅ Pengumuman dihapus", "ok");
+        await Promise.all([loadPengumuman(), loadStats()]);
+      }
+
+      /* ═══ NOTIFIKASI ═══ */
+      async function toggleNotif() {
+        if (notifOn) {
+          notifOn = false;
+          updateNotifUI();
+          showToast("🔕 Notifikasi dinonaktifkan");
+          return;
+        }
+        if (!("Notification" in window)) {
+          showToast("❌ Browser tidak mendukung notifikasi", "err");
+          return;
+        }
+        const perm = await Notification.requestPermission();
+        if (perm === "granted") {
+          notifOn = true;
+          updateNotifUI();
+          new Notification("🏥 Posyandu Kita", {
+            body: "Notifikasi jadwal posyandu aktif!",
+          });
+          showToast("🔔 Notifikasi diaktifkan!", "ok");
+        } else if (perm === "denied") {
+          showToast("❌ Izin ditolak. Aktifkan di pengaturan browser.", "err");
+        }
+      }
+
+      function kirimNotif(title, body) {
+        if (!notifOn || Notification.permission !== "granted") return;
+        new Notification(title, { body });
+      }
+
+      function notifTest() {
+        if (Notification.permission !== "granted") {
+          showToast("⚠️ Aktifkan notifikasi dulu", "warn");
+          return;
+        }
+        kirimNotif(
+          "🧪 Test Notifikasi",
+          "Sistem notifikasi Posyandu Kita berfungsi!",
+        );
+        showToast("📤 Notifikasi test dikirim!", "ok");
+      }
+
+      async function notifHariIni() {
+        if (!notifOn) {
+          showToast("⚠️ Aktifkan notifikasi dulu", "warn");
+          return;
+        }
+        const today = new Date().toISOString().split("T")[0];
+        const { data } = await sb
+          .from("jadwal_posyandu")
+          .select("*")
+          .eq("tanggal", today);
+        if (!data || !data.length) {
+          showToast("ℹ️ Tidak ada jadwal hari ini");
+          return;
+        }
+        data.forEach((j) =>
+          kirimNotif(
+            "📅 Jadwal Hari Ini: " + j.posyandu,
+            j.kegiatan + " pukul " + (j.waktu || "-"),
+          ),
+        );
+        showToast("📤 " + data.length + " notifikasi dikirim!", "ok");
+      }
+
+      function updateNotifUI() {
+        const btn = document.getElementById("notifBtn"),
+          dot = document.getElementById("ndot"),
+          card = document.getElementById("notif-card");
+        const txt = document.getElementById("ntxt"),
+          sub = document.getElementById("nsub");
+        if (notifOn) {
+          btn.classList.add("on");
+          btn.textContent = "🔔 Notifikasi Aktif";
+          dot.className = "ndot on";
+          if (card) card.classList.add("on");
+          if (txt) txt.textContent = "Notifikasi browser aktif";
+          if (sub)
+            sub.textContent =
+              "Anda akan menerima notifikasi jadwal & pengumuman";
+        } else {
+          btn.classList.remove("on");
+          btn.textContent = "🔔 Aktifkan Notifikasi";
+          dot.className = "ndot off";
+          if (card) card.classList.remove("on");
+          if (txt) txt.textContent = "Notifikasi browser belum diaktifkan";
+          if (sub)
+            sub.textContent = "Klik tombol Aktifkan Notifikasi di sidebar";
+        }
+      }
+
+      /* ═══ NAVIGASI ═══ */
+      function showHal(id, btn) {
+        document
+          .querySelectorAll(".halaman")
+          .forEach((p) => p.classList.remove("aktif"));
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((b) => b.classList.remove("aktif"));
+        const hal = document.getElementById("hal-" + id);
+        if (hal) hal.classList.add("aktif");
+        if (btn) btn.classList.add("aktif");
+      }
+
+      function showAdmTab(id, btn) {
+        [
+          "at-jadwal",
+          "at-pengumuman",
+          "at-imunisasi",
+          "at-anak",
+          "at-users",
+        ].forEach((t) => {
+          const el = document.getElementById(t);
+          if (el) el.style.display = t === id ? "block" : "none";
+        });
+        document
+          .querySelectorAll("#hal-admin .tab-btn")
+          .forEach((b) => b.classList.remove("aktif"));
+        if (btn) btn.classList.add("aktif");
+      }
+
+      function tutupModal() {
+        document.getElementById("modal-overlay").classList.remove("show");
+      }
+
+      /* ═══ HELPER ═══ */
+      function escQ(s) {
+        return (s || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+      }
+
+      function fmtTgl(d) {
+        if (!d) return "-";
+        try {
+          return new Date(d).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+        } catch {
+          return d;
+        }
+      }
+      function fmtTglPanjang(d) {
+        if (!d) return "-";
+        try {
+          return new Date(d).toLocaleDateString("id-ID", {
+            weekday: "short",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+        } catch {
+          return d;
+        }
+      }
+      function hitungUsia(tgl) {
+        if (!tgl) return "-";
+        const bulan = Math.floor(
+          (Date.now() - new Date(tgl)) / (1000 * 60 * 60 * 24 * 30.44),
+        );
+        if (bulan < 1) return "< 1 bln";
+        return bulan < 12
+          ? bulan + " bln"
+          : Math.floor(bulan / 12) + " thn " + (bulan % 12) + " bln";
+      }
+      function showToast(msg, tipe = "") {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.className = "toast show " + (tipe || "");
+        clearTimeout(window._tt);
+        window._tt = setTimeout(() => t.classList.remove("show"), 3200);
+      }
+
+      window.addEventListener("load", () => {
+        sb = supabase.createClient(SURL, SKEY);
+        setTimeout(cekSesi, 300);
+      });
+    </script>
+  </body>
+</html>
